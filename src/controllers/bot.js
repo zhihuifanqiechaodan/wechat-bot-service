@@ -66,4 +66,57 @@ export default {
       log4jsError(error);
     }
   },
+  /**
+   * @method say
+   * @param {*} ctx
+   */
+  say: async (ctx) => {
+    try {
+      const { body } = ctx.request;
+
+      const {
+        contactId,
+        contactType,
+        messageType,
+        messageContent,
+        businessCardId,
+        fileUrl,
+        appid,
+        title,
+        pagePath,
+        description,
+        thumbUrl,
+        thumbKey,
+        thumbnailUrl,
+        url,
+      } = body;
+
+      const sayStatus = await wechatyManager.say({
+        contactId,
+        contactType,
+        messageType,
+        messageContent,
+        businessCardId,
+        fileUrl,
+        appid,
+        title,
+        pagePath,
+        description,
+        thumbUrl,
+        thumbKey,
+        thumbnailUrl,
+        url,
+      });
+
+      if (sayStatus) {
+        ctx.body = { code: 2000 };
+      } else {
+        ctx.body = { code: 4509, msg: '消息发送失败' };
+      }
+    } catch (error) {
+      ctx.app.emit('error', ctx);
+
+      log4jsError.error(`\n\n======================== 错误日志 ========================\n\n`, error, `\n\n`);
+    }
+  },
 };

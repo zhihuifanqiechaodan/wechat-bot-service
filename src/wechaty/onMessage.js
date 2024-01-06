@@ -4,13 +4,12 @@ import { log4jsError } from '../utils/lo4js.js';
 import { DelayQueueExecutor } from 'rx-queue';
 import dayjs from 'dayjs';
 import bot from './bot.js';
-import { pick as _pick } from 'lodash-es';
-import qiniuOssUploadFile from '../utils/qiniuOss.js';
+import common from './common.js';
 
 const delay = new DelayQueueExecutor(2 * 1000);
 
 /**
- * @method onMessage 当机器人收到消息的时候会触发这个事件。
+ * @method onMessage
  * @param {Object} message
  */
 const onMessage = async (message) => {
@@ -27,15 +26,17 @@ const onMessage = async (message) => {
 
     const age = message.age();
 
+    const isMentionSelf = await message.mentionSelf();
+
     const messageTimestamp = dayjs().valueOf() - age * 1000;
 
     const messageContent = await messageProcessing(message);
 
+    keywordIdentify({ room, contact, text: messageContent });
+
     delay.execute(async () => {
       try {
         const messageInfo = {
-          userId: process.env.USER_ID,
-          wechatyId: process.env.WECHATY_ID,
           botId: botPayload.id,
           talkerId: message.payload?.talkerId,
           talkerName: talker.payload?.name,
@@ -70,27 +71,9 @@ const onMessage = async (message) => {
 const messageProcessing = async (message) => {
   try {
     return new Promise(async (resolve) => {
-      const userConfig = {};
-
       const contentType = message.type();
 
       let text;
-
-      switch (userConfig.ossType) {
-        case 1:
-          process.env.QINIUYUN_OSS_ACCESSKEY = userConfig.qiniuyunOssAccesskey;
-
-          process.env.QINIUYUN_OSS_SECRETKEY = userConfig.qiniuyunOssSecretkey;
-
-          process.env.QINIUYUN_OSS_BUCKET = userConfig.qiniuyunOssBucket;
-
-          process.env.QINIUYUN_OSS_CUSTOM_DOMAIN = userConfig.qiniuyunOssCustomDomain;
-
-          break;
-
-        default:
-          break;
-      }
 
       switch (contentType) {
         case types.Message.Unknown:
@@ -98,41 +81,7 @@ const messageProcessing = async (message) => {
 
           break;
         case types.Message.Attachment: {
-          const supportPuppetList = ['wechaty-puppet-service'];
-
-          const fileBox = await message.toFileBox();
-
-          const propsToCompare = ['_mediaType', '_name', 'remoteUrl'];
-
-          const messageInfo = _pick(fileBox, propsToCompare);
-
-          const suffix = messageInfo._mediaType.split('/')[1];
-
-          const stream = await fileBox.toStream();
-
-          if (supportPuppetList.includes(process.env.WECHATY_PUPPET)) {
-            text = JSON.stringify(messageInfo);
-          } else {
-            if (userConfig.ossType === 0) {
-              text = '[文件消息，请在手机上查看]';
-            } else {
-              switch (userConfig.ossType) {
-                case 1:
-                  messageInfo.remoteUrl = await qiniuOssUploadFile({
-                    readableStream: stream,
-                    suffix,
-                    defaultText: '[文件消息，请在手机上查看]',
-                  });
-
-                  text = JSON.stringify(messageInfo);
-
-                  break;
-
-                default:
-                  break;
-              }
-            }
-          }
+          text = '[文件消息，请在手机上查看]';
 
           break;
         }
@@ -141,19 +90,7 @@ const messageProcessing = async (message) => {
 
           break;
         case types.Message.Contact: {
-          const supportPuppetList = ['wechaty-puppet-service'];
-
-          if (supportPuppetList.includes(process.env.WECHATY_PUPPET)) {
-            const contact = await message.toContact();
-
-            const propsToCompare = ['avatar', 'name', 'id'];
-
-            const contactInfo = _pick(contact.payload, propsToCompare);
-
-            text = JSON.stringify(contactInfo);
-          } else {
-            text = '[名片消息，请在手机上查看]';
-          }
+          text = '[名片消息，请在手机上查看]';
 
           break;
         }
@@ -181,23 +118,24 @@ const messageProcessing = async (message) => {
           if (supportPuppetList.includes(process.env.WECHATY_PUPPET)) {
             text = fileBox.remoteUrl;
           } else {
-            if (userConfig.ossType === 0) {
-              text = '[图片消息，请在手机上查看]';
-            } else {
-              switch (userConfig.ossType) {
-                case 1:
-                  text = await qiniuOssUploadFile({
-                    readableStream: stream,
-                    suffix,
-                    defaultText: '[图片消息，请在手机上查看]',
-                  });
+            text = '[图片消息，请在手机上查看]';
+            // if (userConfig.ossType === 0) {
+            //   text = '[图片消息，请在手机上查看]';
+            // } else {
+            //   switch (userConfig.ossType) {
+            //     case 1:
+            //       text = await qiniuOssUploadFile({
+            //         readableStream: stream,
+            //         suffix,
+            //         defaultText: '[图片消息，请在手机上查看]',
+            //       });
 
-                  break;
+            //       break;
 
-                default:
-                  break;
-              }
-            }
+            //     default:
+            //       break;
+            //   }
+            // }
           }
 
           break;
@@ -243,35 +181,7 @@ const messageProcessing = async (message) => {
           break;
         }
         case types.Message.Video: {
-          const supportPuppetList = ['wechaty-puppet-service'];
-
-          const fileBox = await message.toFileBox();
-
-          const suffix = fileBox._mediaType.split('/')[1];
-
-          const stream = await fileBox.toStream();
-
-          if (supportPuppetList.includes(process.env.WECHATY_PUPPET)) {
-            text = fileBox.remoteUrl;
-          } else {
-            if (userConfig.ossType === 0) {
-              text = '[视频消息，请在手机上查看]';
-            } else {
-              switch (userConfig.ossType) {
-                case 1:
-                  text = await qiniuOssUploadFile({
-                    readableStream: stream,
-                    suffix,
-                    defaultText: '[视频消息，请在手机上查看]',
-                  });
-
-                  break;
-
-                default:
-                  break;
-              }
-            }
-          }
+          text = '[视频消息，请在手机上查看]';
           break;
         }
         case types.Message.Post:
@@ -289,4 +199,37 @@ const messageProcessing = async (message) => {
     log4jsError(error);
   }
 };
+
+/**
+ * @method keywordIdentify
+ * @param {Object} room
+ * @param {Object} contact
+ * @param {String} text
+ */
+const keywordIdentify = async ({ room, contact, text }) => {
+  const sender = room || contact;
+
+  const downPayment = 197245.0;
+
+  const repayMonthPrice = 3859.05;
+
+  const repayMonthAmount = dayjs().diff(dayjs('2018-04-05'), 'month');
+
+  const repayMonthAmountPrice = (repayMonthAmount * repayMonthPrice).toFixed(2);
+
+  const totalPrice = (downPayment + Number(repayMonthAmountPrice)).toFixed(2);
+
+  if (text === '房贷') {
+    const text = `住房贷款信息：\n内蒙古包头市悠活小镇2栋2401\n房屋总价：627245.00\n贷款利率：5.39%\n提款日期：2018-03-03\n首次还贷：2018-04-05\n到期日期：2031-02-21\n每月还款：${repayMonthPrice}\n房屋首付：${downPayment}\n累计还贷：${repayMonthAmountPrice}\n累计支出：${totalPrice}`;
+
+    common.say({
+      messageType: 7,
+      sender,
+      messageInfo: {
+        text,
+      },
+    });
+  }
+};
+
 export default onMessage;

@@ -16,7 +16,7 @@ import { FileBox } from 'file-box';
 const bot = WechatyBuilder.build({
   puppet: process.env.WECHATY_PUPPET,
   puppetOptions: { token: process.env.WECHATY_TOKEN },
-  name: process.env.WECHATY_PUPPET,
+  // name: process.env.WECHATY_PUPPET, // 增加该字段可以缓存登录信息，但如果更换登录的微信需要删除生成的用户信息文件
 });
 
 /**
@@ -35,6 +35,14 @@ const start = () => {
     .on('friendship', onFriendship)
     .on('heartbeat', onHeartbeat)
     .on('logout', onLogout)
+    .on('error', (error) => {
+      log4jsError(error);
+      // wechaty-puppet-wechat4u
+      //  logout error name: AssertionError, message: '1101 == 0'
+      if (error.details.indexOf('1101 == 0') !== -1) {
+        process.send({ type: 'stopProcess' });
+      }
+    })
     .start()
     .then(() => {
       process.send({ type: 'start' });
@@ -99,7 +107,7 @@ const findAllContact = async () => {
 
 /**
  * @method say
- * @param {object} opyions
+ * @param {Object} options
  */
 const say = async ({
   contactId,
@@ -165,8 +173,7 @@ const say = async ({
 
   sender
     .say(content)
-    .then((value) => {
-      console.log(value);
+    .then(() => {
       process.send({ type: 'say', sayStatus: true });
     })
     .catch((error) => {
@@ -196,7 +203,12 @@ process.on('uncaughtException', async (error) => {
 
 process.on('unhandledRejection', async (error) => {
   log4jsError(error);
-  process.send({ type: 'stopProcess' });
+
+  // wechaty-puppet-wechat4u
+  //  logout error name: AssertionError, message: '1101 == 0'
+  if (error.details.indexOf('1101 == 0') !== -1) {
+    process.send({ type: 'stopProcess' });
+  }
 });
 
 export default bot;

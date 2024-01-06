@@ -76,9 +76,13 @@ class WechatyManager {
 
       child.send({ type: 'start' });
 
-      child.on('message', async (message) => {
+      child.on('message', async (data) => {
         try {
-          const { type, qrcode, botPayload, messageInfo } = message;
+          const { type, qrcode, botPayload, messageInfo } = data;
+
+          if (botPayload) {
+            botPayload.puppet = process.env.WECHATY_PUPPET;
+          }
 
           if (type === 'start') {
             this.robot = child;
@@ -257,7 +261,6 @@ class WechatyManager {
     thumbKey,
     thumbnailUrl,
     url,
-    wechatyId,
   }) {
     return new Promise((resolve) => {
       const child = this.robot;
@@ -279,7 +282,6 @@ class WechatyManager {
           thumbKey,
           thumbnailUrl,
           url,
-          wechatyId,
         },
       });
 
