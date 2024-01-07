@@ -16,7 +16,7 @@ import { FileBox } from 'file-box';
 const bot = WechatyBuilder.build({
   puppet: process.env.WECHATY_PUPPET,
   puppetOptions: { token: process.env.WECHATY_TOKEN },
-  // name: process.env.WECHATY_PUPPET, // 增加该字段可以缓存登录信息，但如果更换登录的微信需要删除生成的用户信息文件
+  name: process.env.WECHATY_PUPPET, // 增加该字段可以缓存登录信息，但如果更换登录的微信需要删除生成的用户信息文件
 });
 
 /**

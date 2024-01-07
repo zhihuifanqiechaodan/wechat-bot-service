@@ -8,6 +8,7 @@ router
   .get('/authQrcode', botControllers.authQrcode)
   .get('/status', botControllers.status)
   .post('/start', botControllers.start)
-  .post('/say', botControllers.say);
+  .post('/say', botControllers.say)
+  .post('/logout', botControllers.logout)
 
 export default router;

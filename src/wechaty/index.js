@@ -3,6 +3,7 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import socketIoManager from '../socket.io/index.js';
 import { log4jsError } from '../utils/lo4js.js';
+import { notSupportPuppets } from '../config/bot.config.js';
 
 class WechatyManager {
   constructor() {
@@ -167,7 +168,10 @@ class WechatyManager {
       child.on('message', async (message) => {
         const { type } = message;
 
-        if (type === 'onLogout') {
+        if (type === 'logout') {
+          if (notSupportPuppets.includes(process.env.WECHATY_PUPPET)) {
+            child.kill();
+          }
           resolve();
         }
       });

@@ -119,4 +119,20 @@ export default {
       log4jsError.error(`\n\n======================== 错误日志 ========================\n\n`, error, `\n\n`);
     }
   },
+  /**
+   * @method logout
+   * @param {*} ctx
+   * @param {*} next
+   */
+  logout: async (ctx) => {
+    try {
+      await wechatyManager.logout();
+
+      ctx.body = { code: 2000 };
+    } catch (error) {
+      ctx.app.emit('error', ctx);
+
+      log4jsError(error);
+    }
+  },
 };
