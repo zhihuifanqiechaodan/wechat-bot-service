@@ -4,6 +4,8 @@ import { fileURLToPath } from 'url';
 import socketIoManager from '../socket.io/index.js';
 import { log4jsError } from '../utils/lo4js.js';
 import { notSupportPuppets } from '../config/bot.config.js';
+import dayjs from 'dayjs';
+import { lowdb } from '../utils/lowdb.js';
 
 class WechatyManager {
   constructor() {
@@ -11,9 +13,11 @@ class WechatyManager {
 
     WechatyManager.instance = this;
 
-    this.robot = null;
+    this.robotProcess = null;
 
     this.qrcode = '';
+
+    this.botPayload = null;
   }
 
   /**
@@ -30,6 +34,7 @@ class WechatyManager {
           WECHATY_PUPPET: puppet,
           WECHATY_TOKEN: token,
           ...process.env,
+          START_TIME: dayjs().valueOf(),
         },
       });
 
@@ -61,10 +66,10 @@ class WechatyManager {
    */
   async start({ puppet, token }) {
     return new Promise((resolve) => {
-      if (this.robot) {
-        this.robot.kill();
+      if (this.robotProcess) {
+        this.robotProcess.kill();
 
-        this.robot = null;
+        this.robotProcess = null;
       }
 
       const child = fork(join(dirname(fileURLToPath(import.meta.url)), './bot.js'), [], {
@@ -79,56 +84,86 @@ class WechatyManager {
 
       child.on('message', async (data) => {
         try {
-          const { type, qrcode, botPayload, messageInfo } = data;
+          const { type, qrcode, botPayload, messageInfo, editRoomTopicInfo } = data;
 
           if (botPayload) {
             botPayload.puppet = process.env.WECHATY_PUPPET;
           }
 
-          if (type === 'start') {
-            this.robot = child;
+          switch (type) {
+            case 'start':
+              this.robotProcess = child;
 
-            child.on('exit', async () => {
-              try {
-                if (this.robot) {
-                  this.robot = null;
-                  socketIoManager.emit('exit');
+              child.on('exit', async () => {
+                try {
+                  if (this.robotProcess) {
+                    this.robotProcess = null;
+                    socketIoManager.emit('exit');
+                  }
+                } catch (error) {
+                  log4jsError(error);
                 }
-              } catch (error) {
-                log4jsError(error);
+              });
+
+              resolve(true);
+
+              break;
+
+            case 'startFail':
+              child.kill();
+
+              resolve(false);
+
+              break;
+
+            case 'qrcode':
+              this.qrcode = qrcode;
+
+              socketIoManager.emit('qrcode', { qrcode });
+
+              break;
+
+            case 'onLogin':
+              this.botPayload = botPayload;
+
+              socketIoManager.emit('onLogin', { botPayload });
+
+              if (!lowdb.data[botPayload.id]) {
+                lowdb.data[botPayload.id] = {
+                  roomsConfig: {},
+                  contactsConfig: {},
+                  botConfig: {},
+                };
+
+                lowdb.write();
               }
-            });
 
-            resolve(true);
-          }
+              break;
 
-          if (type === 'startFail') {
-            child.kill();
+            case 'onLogout':
+              socketIoManager.emit('onLogout', { botPayload });
 
-            resolve(false);
-          }
+              break;
 
-          if (type === 'qrcode') {
-            this.qrcode = qrcode;
+            case 'onMessage':
+              socketIoManager.emit('onMessage', { messageInfo });
 
-            socketIoManager.emit('qrcode', { qrcode });
-          }
+              break;
 
-          if (type === 'onLogin') {
-            socketIoManager.emit('onLogin', { botPayload });
-          }
+            case 'stopProcess':
+              child.kill();
 
-          if (type === 'onLogout') {
-            socketIoManager.emit('onLogout', { botPayload });
-          }
+              socketIoManager.emit('stopProcess');
 
-          if (type === 'onMessage') {
-            socketIoManager.emit('onMessage', { messageInfo });
-          }
+              break;
 
-          if (type === 'stopProcess') {
-            child.kill();
-            socketIoManager.emit('stopProcess');
+            case 'onRoomTopic':
+              socketIoManager.emit('onRoomTopic', { editRoomTopicInfo });
+
+              break;
+
+            default:
+              break;
           }
         } catch (error) {
           log4jsError(error);
@@ -143,11 +178,11 @@ class WechatyManager {
    */
   async stop() {
     return new Promise(async (resolve) => {
-      const child = this.robot;
+      const child = this.robotProcess;
 
       child.kill();
 
-      this.robot = null;
+      this.robotProcess = null;
 
       socketIoManager.emit('exit');
 
@@ -161,7 +196,7 @@ class WechatyManager {
    */
   async logout() {
     return new Promise((resolve) => {
-      const child = this.robot;
+      const child = this.robotProcess;
 
       child.send({ type: 'logout' });
 
@@ -184,7 +219,7 @@ class WechatyManager {
    */
   async isLoggedIn() {
     return new Promise((resolve) => {
-      const child = this.robot;
+      const child = this.robotProcess;
 
       child.send({ type: 'isLoggedIn' });
 
@@ -202,7 +237,7 @@ class WechatyManager {
    */
   async authQrcode() {
     return new Promise((resolve) => {
-      const child = this.robot;
+      const child = this.robotProcess;
 
       child.send({ type: 'authQrcode' });
 
@@ -220,7 +255,7 @@ class WechatyManager {
    */
   async findAllRoom() {
     return new Promise((resolve) => {
-      const child = this.robot;
+      const child = this.robotProcess;
 
       child.send({ type: 'findAllRoom' });
 
@@ -238,7 +273,7 @@ class WechatyManager {
    */
   async findAllContact() {
     return new Promise((resolve) => {
-      const child = this.robot;
+      const child = this.robotProcess;
 
       child.send({ type: 'findAllContact' });
 
@@ -267,7 +302,7 @@ class WechatyManager {
     url,
   }) {
     return new Promise((resolve) => {
-      const child = this.robot;
+      const child = this.robotProcess;
 
       child.send({
         type: 'say',
@@ -293,6 +328,24 @@ class WechatyManager {
         const { type, sayStatus } = message;
 
         type === 'say' && resolve(sayStatus);
+      });
+    });
+  }
+
+  /**
+   * @method editRoomTopic
+   * @param {Object} options
+   * @param {String} options.topic
+   * @param {String} options.contactId
+   */
+  async editRoomTopic({ topic, contactId }) {
+    return new Promise((resolve) => {
+      this.robotProcess.send({ type: 'editRoomTopic', params: { topic, contactId } });
+
+      this.robotProcess.on('message', (message) => {
+        const { type } = message;
+
+        type === 'editRoomTopic' && resolve();
       });
     });
   }

@@ -19,6 +19,7 @@ specifiers:
   lint-staged: ^13.2.3
   lodash-es: ^4.17.21
   log4js: ^6.9.1
+  lowdb: ^7.0.1
   mysql2: ^3.6.0
   nodemon: ^3.0.2
   prettier: ^3.0.1
@@ -47,6 +48,7 @@ dependencies:
   koa2-cors: registry.npmmirror.com/koa2-cors/2.0.6
   lodash-es: registry.npmmirror.com/lodash-es/4.17.21
   log4js: registry.npmmirror.com/log4js/6.9.1
+  lowdb: registry.npmmirror.com/lowdb/7.0.1
   mysql2: registry.npmmirror.com/mysql2/3.6.0
   qiniu: registry.npmmirror.com/qiniu/7.11.0
   qrcode-terminal: registry.npmmirror.com/qrcode-terminal/0.12.0
@@ -3726,6 +3728,15 @@ packages:
     version: 5.2.3
     dev: false
 
+  registry.npmmirror.com/lowdb/7.0.1:
+    resolution: {integrity: sha512-neJAj8GwF0e8EpycYIDFqEPcx9Qz4GUho20jWFR7YiFeXzF1YMLdxB36PypcTSPMA+4+LvgyMacYhlr18Zlymw==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/lowdb/-/lowdb-7.0.1.tgz}
+    name: lowdb
+    version: 7.0.1
+    engines: {node: '>=18'}
+    dependencies:
+      steno: registry.npmmirror.com/steno/4.0.2
+    dev: false
+
   registry.npmmirror.com/lru-cache/6.0.0:
     resolution: {integrity: sha512-Jo6dJ04CmSjuznwJSS3pUeWmd/H0ffTlkXXgwZi+eq1UCmqQwCh+eLsYOYCwY991i2Fah4h1BEMCx4qThGbsiA==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/lru-cache/-/lru-cache-6.0.0.tgz}
     name: lru-cache
@@ -5140,6 +5151,13 @@ packages:
     name: statuses
     version: 2.0.1
     engines: {node: '>= 0.8'}
+    dev: false
+
+  registry.npmmirror.com/steno/4.0.2:
+    resolution: {integrity: sha512-yhPIQXjrlt1xv7dyPQg2P17URmXbuM5pdGkpiMB3RenprfiBlvK415Lctfe0eshk90oA7/tNq7WEiMK8RSP39A==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/steno/-/steno-4.0.2.tgz}
+    name: steno
+    version: 4.0.2
+    engines: {node: '>=18'}
     dev: false
 
   registry.npmmirror.com/streamroller/3.1.5:

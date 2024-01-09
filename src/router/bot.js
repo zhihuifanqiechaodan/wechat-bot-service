@@ -10,5 +10,7 @@ router
   .post('/start', botControllers.start)
   .post('/say', botControllers.say)
   .post('/logout', botControllers.logout)
+  .get('/roomConfig', botControllers.getRoomConfig)
+  .post('/editTopic', botControllers.editTopic);
 
 export default router;

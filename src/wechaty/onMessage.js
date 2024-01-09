@@ -16,6 +16,12 @@ const onMessage = async (message) => {
   try {
     if (message.payload?.type === 0) return;
 
+    const age = message.age();
+
+    const messageTimestamp = dayjs().valueOf() - age * 1000;
+
+    if (process.env.START_TIME > messageTimestamp) return;
+
     const isSelf = message.self();
 
     const talker = message.talker();
@@ -24,11 +30,7 @@ const onMessage = async (message) => {
 
     const contact = room ? room : isSelf ? await bot.Contact.find({ id: message.payload?.listenerId }) : talker;
 
-    const age = message.age();
-
     const isMentionSelf = await message.mentionSelf();
-
-    const messageTimestamp = dayjs().valueOf() - age * 1000;
 
     const messageContent = await messageProcessing(message);
 

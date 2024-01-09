@@ -1,4 +1,6 @@
+import { defaultRoomConfig } from '../config/bot.config.js';
 import { log4jsError } from '../utils/lo4js.js';
+import { lowdb } from '../utils/lowdb.js';
 import wechatyManager from '../wechaty/index.js';
 
 export default {
@@ -9,7 +11,7 @@ export default {
    */
   status: async (ctx) => {
     try {
-      if (!wechatyManager.robot) {
+      if (!wechatyManager.robotProcess) {
         ctx.body = {
           code: 5003,
           msg: 'bot服务未启动',
@@ -127,6 +129,50 @@ export default {
   logout: async (ctx) => {
     try {
       await wechatyManager.logout();
+
+      ctx.body = { code: 2000 };
+    } catch (error) {
+      ctx.app.emit('error', ctx);
+
+      log4jsError(error);
+    }
+  },
+  /**
+   * @method getRoomConfig
+   * @param {*} ctx
+   * @param {*} next
+   */
+  getRoomConfig: async (ctx) => {
+    try {
+      const { contactId } = ctx.request.query;
+
+      const roomConfig = lowdb.data[wechatyManager.botPayload.id].roomsConfig[contactId];
+
+      if (roomConfig) {
+        ctx.body = { code: 2000, data: { roomConfig } };
+      } else {
+        lowdb.data[wechatyManager.botPayload.id].roomsConfig[contactId] = defaultRoomConfig;
+
+        lowdb.write();
+
+        ctx.body = { code: 2000, data: { roomConfig: defaultRoomConfig } };
+      }
+    } catch (error) {
+      ctx.app.emit('error', ctx);
+
+      log4jsError(error);
+    }
+  },
+  /**
+   * @method editTopic
+   * @param {*} ctx
+   * @param {*} next
+   */
+  editTopic: async (ctx) => {
+    try {
+      const { contactId, topic } = ctx.request.body;
+
+      await wechatyManager.editRoomTopic({ contactId, topic });
 
       ctx.body = { code: 2000 };
     } catch (error) {

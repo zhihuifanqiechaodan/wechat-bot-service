@@ -106,6 +106,20 @@ const findAllContact = async () => {
 };
 
 /**
+ * @method editRoomTopic
+ * @param {Object} options
+ * @param {String} options.topic
+ * @param {String} options.contactId
+ */
+const editRoomTopic = async ({ topic, contactId }) => {
+  const room = await bot.Room.find({ id: contactId });
+
+  await room.topic(topic);
+
+  process.send({ type: 'editRoomTopic' });
+};
+
+/**
  * @method say
  * @param {Object} options
  */
@@ -193,6 +207,7 @@ process.on('message', ({ type, params }) => {
     findAllContact,
     say,
     authQrcode,
+    editRoomTopic,
   };
   method[type](params);
 });
