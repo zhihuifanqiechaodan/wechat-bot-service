@@ -2,6 +2,7 @@ import { defaultRoomConfig } from '../config/bot.config.js';
 import { log4jsError } from '../utils/lo4js.js';
 import { lowdb } from '../utils/lowdb.js';
 import wechatyManager from '../wechaty/index.js';
+import { merge as _merge } from 'lodash-es';
 
 export default {
   /**
@@ -149,7 +150,13 @@ export default {
       const roomConfig = lowdb.data[wechatyManager.botPayload.id].roomsConfig[contactId];
 
       if (roomConfig) {
-        ctx.body = { code: 2000, data: { roomConfig } };
+        const newRoomConfig = _merge(defaultRoomConfig, roomConfig);
+
+        lowdb.data[wechatyManager.botPayload.id].roomsConfig[contactId] = newRoomConfig;
+
+        lowdb.write();
+
+        ctx.body = { code: 2000, data: { roomConfig: newRoomConfig } };
       } else {
         lowdb.data[wechatyManager.botPayload.id].roomsConfig[contactId] = defaultRoomConfig;
 
@@ -175,6 +182,22 @@ export default {
       await wechatyManager.editRoomTopic({ contactId, topic });
 
       ctx.body = { code: 2000 };
+    } catch (error) {
+      ctx.app.emit('error', ctx);
+
+      log4jsError(error);
+    }
+  },
+  /**
+   * @method info
+   * @param {*} ctx
+   * @param {*} next
+   */
+  info: async (ctx) => {
+    try {
+      const botPayload = wechatyManager.botPayload;
+
+      ctx.body = { code: 2000, data: { botPayload } };
     } catch (error) {
       ctx.app.emit('error', ctx);
 

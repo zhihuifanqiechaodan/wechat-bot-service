@@ -5,6 +5,7 @@ import { DelayQueueExecutor } from 'rx-queue';
 import dayjs from 'dayjs';
 import bot from './bot.js';
 import common from './common.js';
+import { lowdb } from '../utils/lowdb.js';
 
 const delay = new DelayQueueExecutor(2 * 1000);
 
@@ -113,31 +114,12 @@ const messageProcessing = async (message) => {
 
           const fileBox = await message.toFileBox();
 
-          const suffix = fileBox._mediaType.split('/')[1];
-
-          const stream = await fileBox.toStream();
-
           if (supportPuppetList.includes(process.env.WECHATY_PUPPET)) {
             text = fileBox.remoteUrl;
           } else {
-            text = '[图片消息，请在手机上查看]';
-            // if (userConfig.ossType === 0) {
-            //   text = '[图片消息，请在手机上查看]';
-            // } else {
-            //   switch (userConfig.ossType) {
-            //     case 1:
-            //       text = await qiniuOssUploadFile({
-            //         readableStream: stream,
-            //         suffix,
-            //         defaultText: '[图片消息，请在手机上查看]',
-            //       });
+            const base64Image = await fileBox.toBase64();
 
-            //       break;
-
-            //     default:
-            //       break;
-            //   }
-            // }
+            text = `data:${fileBox._mediaType};base64,${base64Image}`;
           }
 
           break;

@@ -5,8 +5,6 @@ import socketIoManager from '../socket.io/index.js';
 import { log4jsError } from '../utils/lo4js.js';
 import { notSupportPuppets } from '../config/bot.config.js';
 import dayjs from 'dayjs';
-import { lowdb } from '../utils/lowdb.js';
-
 class WechatyManager {
   constructor() {
     if (WechatyManager.instance) return WechatyManager.instance;
@@ -127,16 +125,6 @@ class WechatyManager {
               this.botPayload = botPayload;
 
               socketIoManager.emit('onLogin', { botPayload });
-
-              if (!lowdb.data[botPayload.id]) {
-                lowdb.data[botPayload.id] = {
-                  roomsConfig: {},
-                  contactsConfig: {},
-                  botConfig: {},
-                };
-
-                lowdb.write();
-              }
 
               break;
 

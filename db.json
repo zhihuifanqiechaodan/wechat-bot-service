@@ -1,5 +1,16 @@
 {
   "wxid_6223002249912": {
-    "a": 1
+    "roomsConfig": {},
+    "contactsConfig": {},
+    "botConfig": {}
+  },
+  "wxid_6ewbcbl5wi8112": {
+    "roomsConfig": {
+      "123": {
+        "isKeywordReplyEnabled": false
+      }
+    },
+    "contactsConfig": {},
+    "botConfig": {}
   }
 }
