@@ -1,16 +1,28 @@
 {
   "wxid_6223002249912": {
-    "roomsConfig": {},
-    "contactsConfig": {},
-    "botConfig": {}
-  },
-  "wxid_6ewbcbl5wi8112": {
-    "roomsConfig": {
-      "123": {
+    "botConfig": {},
+    "contactConfig": {
+      "25578000953@chatroom": {
         "isKeywordReplyEnabled": false
+      },
+      "34737305399@chatroom": {
+        "contactConfig": {
+          "isKeywordReplyEnabled": false
+        },
+        "isKeywordReplyEnabled": true
+      },
+      "20736057198@chatroom": {
+        "isKeywordReplyEnabled": false
+      },
+      "undefined": {
+        "isKeywordReplyEnabled": false
+      },
+      "20224011280@chatroom": {
+        "isKeywordReplyEnabled": true
+      },
+      "45411383657@chatroom": {
+        "isKeywordReplyEnabled": true
       }
-    },
-    "contactsConfig": {},
-    "botConfig": {}
+    }
   }
 }

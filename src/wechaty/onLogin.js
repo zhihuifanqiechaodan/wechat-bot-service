@@ -1,5 +1,4 @@
 import { log4jsError } from '../utils/lo4js.js';
-import { lowdb } from '../utils/lowdb.js';
 
 export let botPayload;
 
@@ -10,16 +9,6 @@ export let botPayload;
 const onLogin = async (user) => {
   try {
     botPayload = user.payload;
-
-    if (!lowdb.data[botPayload.id]) {
-      lowdb.data[botPayload.id] = {
-        roomsConfig: {},
-        contactsConfig: {},
-        botConfig: {},
-      };
-
-      await lowdb.write();
-    }
 
     process.send({ type: 'onLogin', botPayload });
   } catch (error) {

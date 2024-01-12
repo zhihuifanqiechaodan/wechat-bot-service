@@ -62,6 +62,9 @@ const log4jsInfo = (message) => log4js.getLogger('info').info(message);
  * @param {string} message
  * @returns
  */
-const log4jsError = (message) => log4js.getLogger('error').error(message);
+const log4jsError = (message) => {
+  console.log(message);
+  return log4js.getLogger('error').error(message);
+};
 
 export { log4jsError, log4jsInfo };

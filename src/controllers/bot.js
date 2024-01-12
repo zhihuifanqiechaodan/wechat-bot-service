@@ -1,4 +1,4 @@
-import { defaultRoomConfig } from '../config/bot.config.js';
+import { defaultContactConfig } from '../config/bot.config.js';
 import { log4jsError } from '../utils/lo4js.js';
 import { lowdb } from '../utils/lowdb.js';
 import wechatyManager from '../wechaty/index.js';
@@ -139,30 +139,30 @@ export default {
     }
   },
   /**
-   * @method getRoomConfig
+   * @method contactConfig
    * @param {*} ctx
    * @param {*} next
    */
-  getRoomConfig: async (ctx) => {
+  contactConfig: async (ctx) => {
     try {
       const { contactId } = ctx.request.query;
 
-      const roomConfig = lowdb.data[wechatyManager.botPayload.id].roomsConfig[contactId];
+      const contactConfig = lowdb.data[wechatyManager.botPayload.id].contactConfig[contactId];
 
-      if (roomConfig) {
-        const newRoomConfig = _merge(defaultRoomConfig, roomConfig);
+      if (contactConfig) {
+        const newContactConfig = _merge(defaultContactConfig, contactConfig);
 
-        lowdb.data[wechatyManager.botPayload.id].roomsConfig[contactId] = newRoomConfig;
+        lowdb.data[wechatyManager.botPayload.id].contactConfig[contactId] = newContactConfig;
 
         lowdb.write();
 
-        ctx.body = { code: 2000, data: { roomConfig: newRoomConfig } };
+        ctx.body = { code: 2000, data: { contactConfig: newContactConfig } };
       } else {
-        lowdb.data[wechatyManager.botPayload.id].roomsConfig[contactId] = defaultRoomConfig;
+        lowdb.data[wechatyManager.botPayload.id].contactConfig[contactId] = defaultContactConfig;
 
         lowdb.write();
 
-        ctx.body = { code: 2000, data: { roomConfig: defaultRoomConfig } };
+        ctx.body = { code: 2000, data: { contactConfig: defaultContactConfig } };
       }
     } catch (error) {
       ctx.app.emit('error', ctx);
@@ -198,6 +198,26 @@ export default {
       const botPayload = wechatyManager.botPayload;
 
       ctx.body = { code: 2000, data: { botPayload } };
+    } catch (error) {
+      ctx.app.emit('error', ctx);
+
+      log4jsError(error);
+    }
+  },
+  /**
+   * @method contactConfigUpdate
+   * @param {*} ctx
+   * @param {*} next
+   */
+  contactConfigUpdate: async (ctx) => {
+    try {
+      const { contactConfig, contactId } = ctx.request.body;
+
+      lowdb.data[wechatyManager.botPayload.id].contactConfig[contactId] = contactConfig;
+
+      await lowdb.write();
+
+      ctx.body = { code: 2000 };
     } catch (error) {
       ctx.app.emit('error', ctx);
 
